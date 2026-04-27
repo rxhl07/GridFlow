@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import MetricCard from '../components/dashboard/MetricCard';
 import ForecastingChart from '../components/dashboard/ForecastingChart';
@@ -6,9 +6,34 @@ import UsageDonuts from '../components/dashboard/UsageDonuts';
 import FeatureImportance from '../components/dashboard/FeatureImportance';
 import { Zap, Activity, CloudSun, ShieldCheck, Download, Filter } from 'lucide-react';
 import { cn } from '../lib/utils';
-
+import { fetchPrediction } from '../lib/api';
 
 const Dashboard: React.FC = () => {
+  // State to hold the live prediction from the FastAPI backend
+  const [predictedDemand, setPredictedDemand] = useState<string>("Loading...");
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    const getInitialPrediction = async () => {
+      // Sending current baseline weather data to get a prediction
+      const demand = await fetchPrediction({
+        temperature: 32,
+        humidity: 65,
+        hour: new Date().getHours(), // Current hour
+        is_holiday: 0
+      });
+
+      if (demand) {
+        // Format the number with commas (e.g., 14,250)
+        setPredictedDemand(demand.toLocaleString('en-US', { maximumFractionDigits: 0 }));
+      } else {
+        setPredictedDemand("Error");
+      }
+    };
+
+    getInitialPrediction();
+  }, []);
+
   return (
     <Layout title="Greater Grid Forecasting">
       <div className="max-w-[1600px] mx-auto space-y-8">
@@ -24,7 +49,7 @@ const Dashboard: React.FC = () => {
           />
           <MetricCard
             label="Predicted Peak Demand"
-            value="15,450"
+            value={predictedDemand} // Now using live state instead of hardcoded value
             unit="MW"
             trend={{ value: 0.8, isUp: false }}
             icon={Activity}
