@@ -1,98 +1,92 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
+import { fetch24HourForecast, type ForecastDataPoint } from '../../lib/api';
 
-const data = [
-  { time: '00:00', actual: 400, forecast: 420 },
-  { time: '04:00', actual: 300, forecast: 310 },
-  { time: '08:00', actual: 600, forecast: 580 },
-  { time: '12:00', actual: 800, forecast: 850 },
-  { time: '16:00', actual: 700, forecast: 720 },
-  { time: '20:00', actual: 900, forecast: 880 },
-  { time: '23:59', actual: 500, forecast: 520 },
-];
+const ForecastingChart: React.FC = () => {
+  const [data, setData] = useState<ForecastDataPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
+  useEffect(() => {
+    const getForecast = async () => {
+      // Fetching the forecast based on current conditions
+      const currentHour = new Date().getHours();
+      const forecastData = await fetch24HourForecast({
+        temperature: 32,
+        humidity: 65,
+        hour: currentHour,
+        is_holiday: 0
+      });
+
+      setData(forecastData);
+      setIsLoading(false);
+    };
+
+    getForecast();
+  }, []);
+
+  if (isLoading) {
     return (
-      <div className="bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-xl border border-white/20">
-        <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-bold flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
-            <span className="text-gray-600">Actual:</span>
-            <span className="text-gray-900">{payload[0].value} MW</span>
-          </p>
-          <p className="text-sm font-bold flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#EC4899]" />
-            <span className="text-gray-600">Forecast:</span>
-            <span className="text-gray-900">{payload[1].value} MW</span>
-          </p>
+      <div className="w-full h-[400px] flex items-center justify-center bg-gray-50 rounded-xl border border-gray-100">
+        <div className="animate-pulse flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-bold text-gray-400">Loading AI Forecast...</p>
         </div>
       </div>
     );
   }
-  return null;
-};
 
-const ForecastingChart: React.FC = () => {
+  // Custom Tooltip for when you hover over the chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-900 text-white p-4 rounded-xl shadow-2xl border border-gray-700">
+          <p className="text-xs font-bold text-gray-400 mb-1">{label}</p>
+          <p className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+            {payload[0].value.toLocaleString()} MW
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="h-[400px] w-full">
+    <div className="w-full h-[400px] mt-4">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <defs>
-            <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
-              <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-            </linearGradient>
-            <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#EC4899" stopOpacity={0.1}/>
-              <stop offset="95%" stopColor="#EC4899" stopOpacity={0}/>
+            {/* The nice gradient fill under the line */}
+            <linearGradient id="colorDemand" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-          <XAxis 
-            dataKey="time" 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 500 }}
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+          <XAxis
+            dataKey="time"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 600 }}
             dy={10}
           />
-          <YAxis 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 500 }}
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 600 }}
+            tickFormatter={(value) => `${value / 1000}k`} // Formats 15000 as 15k
             dx={-10}
           />
-          <Tooltip content={<CustomTooltip />} />
-          <Area 
-            type="monotone" 
-            dataKey="actual" 
-            stroke="#3B82F6" 
-            strokeWidth={3}
-            fillOpacity={1} 
-            fill="url(#colorActual)" 
-            animationDuration={2000}
-          />
-          <Area 
-            type="monotone" 
-            dataKey="forecast" 
-            stroke="#EC4899" 
-            strokeWidth={3}
-            strokeDasharray="5 5"
-            fillOpacity={1} 
-            fill="url(#colorForecast)" 
-            animationDuration={2000}
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#9CA3AF', strokeWidth: 1, strokeDasharray: '4 4' }} />
+          <Area
+            type="monotone"
+            dataKey="demand"
+            stroke="#3B82F6"
+            strokeWidth={4}
+            fillOpacity={1}
+            fill="url(#colorDemand)"
+            activeDot={{ r: 8, strokeWidth: 0, fill: '#3B82F6', className: "drop-shadow-md" }}
           />
         </AreaChart>
       </ResponsiveContainer>

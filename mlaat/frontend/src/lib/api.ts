@@ -27,3 +27,30 @@ export const fetchPrediction = async (data: PredictionInput) => {
         return null;
     }
 };
+
+export interface ForecastDataPoint {
+    time: string;
+    demand: number;
+}
+
+export const fetch24HourForecast = async (data: PredictionInput): Promise<ForecastDataPoint[]> => {
+    try {
+        const response = await fetch('http://localhost:8000/api/forecast', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const result = await response.json();
+        return result.forecast;
+    } catch (error) {
+        console.error("Failed to fetch forecast:", error);
+        return [];
+    }
+};

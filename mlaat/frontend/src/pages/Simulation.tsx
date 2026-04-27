@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import ControlPanel from '../components/simulation/ControlPanel';
 import SimulationMap from '../components/simulation/SimulationMap';
 import { History, Maximize2, Search } from 'lucide-react';
 
 const Simulation: React.FC = () => {
-  const [isLogsOpen, setIsLogsOpen] = React.useState(false);
+  const [isLogsOpen, setIsLogsOpen] = useState(false);
+
+  // NEW: Lifted state to manage the global load between sibling components
+  const [currentLoad, setCurrentLoad] = useState<number>(12000);
 
   return (
     <Layout title="ML Simulation & Control">
       <div className="relative h-[calc(100vh-10rem)] w-full">
         {/* Map Layer */}
         <div className="absolute inset-0 z-0">
-          <SimulationMap />
+          {/* NEW: Pass currentLoad down as a prop */}
+          <SimulationMap currentLoad={currentLoad} />
         </div>
 
         {/* Floating UI Layers */}
         <div className="absolute inset-0 z-10 pointer-events-none p-8 flex justify-between">
           <div className="pointer-events-auto">
-            <ControlPanel />
+            {/* NEW: Pass the setter function down so the control panel can update it */}
+            <ControlPanel onPredictionUpdate={setCurrentLoad} />
           </div>
 
           <div className="flex flex-col gap-4 pointer-events-auto items-end">
@@ -29,7 +34,7 @@ const Simulation: React.FC = () => {
               <button className="p-2.5 hover:bg-gray-50 rounded-xl transition-colors text-gray-400 hover:text-blue-500">
                 <Maximize2 size={20} />
               </button>
-              <button 
+              <button
                 onClick={() => setIsLogsOpen(!isLogsOpen)}
                 className="p-2.5 bg-blue-50 text-blue-600 rounded-xl transition-colors flex items-center gap-2 px-4"
               >

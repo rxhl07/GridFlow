@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import { Thermometer, Droplets, Clock, Calendar, Play, Activity } from 'lucide-react';
 import { fetchPrediction } from '../../lib/api';
 
-const ControlPanel: React.FC = () => {
+// NEW: Define the props expected from the parent
+interface ControlPanelProps {
+  onPredictionUpdate: (load: number) => void;
+}
+
+// NEW: Add the prop to the component signature
+const ControlPanel: React.FC<ControlPanelProps> = ({ onPredictionUpdate }) => {
   // Input States
   const [temperature, setTemperature] = useState<number>(30);
   const [humidity, setHumidity] = useState<number>(60);
@@ -26,6 +32,8 @@ const ControlPanel: React.FC = () => {
 
     if (result) {
       setPredictedDemand(result);
+      // NEW: Pass the resulting prediction back up to the parent component
+      onPredictionUpdate(result);
     }
 
     setIsLoading(false);
