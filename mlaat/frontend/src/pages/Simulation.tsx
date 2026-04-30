@@ -11,8 +11,8 @@ const Simulation: React.FC = () => {
   const [currentLoad, setCurrentLoad] = useState<number>(12000);
 
   return (
-    <Layout title="ML Simulation & Control">
-      <div className="relative h-[calc(100vh-10rem)] w-full">
+    <Layout title="ML Simulation & Control" noPadding>
+      <div className="relative h-[calc(100vh-5rem)] w-full">
         {/* Map Layer */}
         <div className="absolute inset-0 z-0">
           {/* NEW: Pass currentLoad down as a prop */}
@@ -20,7 +20,7 @@ const Simulation: React.FC = () => {
         </div>
 
         {/* Floating UI Layers */}
-        <div className="absolute inset-0 z-10 pointer-events-none p-8 flex justify-between">
+        <div className="absolute inset-0 z-10 pointer-events-none flex justify-between items-start p-6">
           <div className="pointer-events-auto">
             {/* NEW: Pass the setter function down so the control panel can update it */}
             <ControlPanel onPredictionUpdate={setCurrentLoad} />

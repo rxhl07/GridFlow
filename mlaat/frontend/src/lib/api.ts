@@ -6,7 +6,14 @@ export interface PredictionInput {
     is_holiday: number;
 }
 
-export const fetchPrediction = async (data: PredictionInput) => {
+// NEW: Define the structure for the 3-model response
+export interface PredictionResult {
+    xgboost: number;
+    rf: number;
+    linear: number;
+}
+
+export const fetchPrediction = async (data: PredictionInput): Promise<PredictionResult | null> => {
     try {
         const response = await fetch('http://localhost:8000/api/predict', {
             method: 'POST',
@@ -21,7 +28,12 @@ export const fetchPrediction = async (data: PredictionInput) => {
         }
 
         const result = await response.json();
-        return result.predicted_demand_mw;
+        // Return the whole object containing all 3 models
+        return {
+            xgboost: result.xgboost,
+            rf: result.rf,
+            linear: result.linear
+        };
     } catch (error) {
         console.error("Failed to fetch prediction:", error);
         return null;

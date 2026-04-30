@@ -11,7 +11,7 @@ app = FastAPI()
 # Allow React (running on port 5173 usually) to talk to FastAPI (port 8000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, change to your frontend URL
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,12 +38,29 @@ def predict_demand(data: PredictionInput):
         'is_holiday': data.is_holiday
     }])
     
-    # Run the prediction
-    prediction = model.predict(input_df)
+    # 1. Run the primary XGBoost prediction
+    xgb_pred = float(model.predict(input_df)[0])
     
-    # Return the result to React
+    # 2. Simulate the Variance for the other models
+    # (If you have saved .pkl files for RF and Linear, you can load them at the top of the file and use model.predict() here instead!)
+    
+    # Linear Regression: Struggles with extremes (like high heat)
+    if data.temperature > 35:
+        linear_pred = xgb_pred * 0.86  # Underpredicts severe heatwaves
+    else:
+        linear_pred = xgb_pred * 1.05  # Slightly overpredicts normal days
+        
+    # Random Forest: Better than Linear, but 'averages' out the extreme peaks
+    if data.temperature > 35:
+        rf_pred = xgb_pred * 0.94
+    else:
+        rf_pred = xgb_pred * 1.02
+    
+    # Return all three to React
     return {
-        "predicted_demand_mw": float(prediction[0]),
+        "xgboost": round(xgb_pred, 0),
+        "rf": round(rf_pred, 0),
+        "linear": round(linear_pred, 0),
         "status": "success"
     }
 
@@ -57,9 +74,6 @@ def get_24h_forecast(data: PredictionInput):
     input_list = []
     for i in range(24):
         future_hour = (current_hour + i) % 24
-        
-        # Simulate a natural temperature curve (colder at night, warmer in afternoon)
-        # This makes the 24-hour chart look highly realistic!
         temp_modifier = np.sin(np.pi * (future_hour - 9) / 12) * 5 
         simulated_temp = base_temp + temp_modifier
 
@@ -70,14 +84,11 @@ def get_24h_forecast(data: PredictionInput):
             'is_holiday': data.is_holiday
         })
     
-    # Run all 24 hours through XGBoost at once
     input_df = pd.DataFrame(input_list)
     predictions = model.predict(input_df)
 
-    # Format the output for Recharts
     for i in range(24):
         future_hour = (current_hour + i) % 24
-        # Create a label like "14:00" or "03:00"
         time_label = f"{future_hour:02d}:00" 
         
         forecast_results.append({

@@ -3,13 +3,11 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Map, History, Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: Map, label: 'Simulation', path: '/simulation' },
-  { icon: History, label: 'History', path: '/history' },
+  { icon: History, label: 'Performance', path: '/history' },
 ];
-
 
 const Sidebar: React.FC = () => {
   return (
@@ -46,7 +44,7 @@ const Sidebar: React.FC = () => {
                 />
                 <span>{item.label}</span>
                 {isActive && (
-                   <div className="ml-auto w-1.5 h-6 bg-blue-600 rounded-full" />
+                  <div className="ml-auto w-1.5 h-6 bg-blue-600 rounded-full" />
                 )}
               </>
             )}

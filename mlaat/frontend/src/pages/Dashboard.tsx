@@ -9,8 +9,8 @@ import { cn } from '../lib/utils';
 import { fetchPrediction } from '../lib/api';
 
 const Dashboard: React.FC = () => {
-  // State to hold the live prediction from the FastAPI backend
-  const [predictedDemand, setPredictedDemand] = useState<string>("Loading...");
+  // 1. FIXED: Changed state type to 'any' and initialized as null to handle the new API object
+  const [predictedDemand, setPredictedDemand] = useState<any>(null);
 
   // Fetch data when the component mounts
   useEffect(() => {
@@ -24,10 +24,10 @@ const Dashboard: React.FC = () => {
       });
 
       if (demand) {
-        // Format the number with commas (e.g., 14,250)
-        setPredictedDemand(demand.toLocaleString('en-US', { maximumFractionDigits: 0 }));
+        // 2. FIXED: We now save the entire object {xgboost: ..., rf: ..., linear: ...} to state
+        setPredictedDemand(demand);
       } else {
-        setPredictedDemand("Error");
+        setPredictedDemand(null);
       }
     };
 
@@ -47,14 +47,17 @@ const Dashboard: React.FC = () => {
             icon={Zap}
             colorClass="bg-blue-50 text-blue-600"
           />
+
+          {/* 3. FIXED: Using optional chaining (?.) to safely pull just the XGBoost number */}
           <MetricCard
             label="Predicted Peak Demand"
-            value={predictedDemand} // Now using live state instead of hardcoded value
+            value={predictedDemand?.xgboost ? predictedDemand.xgboost.toLocaleString('en-US', { maximumFractionDigits: 0 }) : "---"}
             unit="MW"
             trend={{ value: 0.8, isUp: false }}
             icon={Activity}
             colorClass="bg-pink-50 text-pink-600"
           />
+
           <MetricCard
             label="Current Temperature"
             value="32"

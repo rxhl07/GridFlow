@@ -2,8 +2,9 @@ import React from 'react';
 import Layout from '../components/layout/Layout';
 import { CheckCircle2, AlertTriangle, ArrowDownRight, ArrowUpRight, Download } from 'lucide-react';
 import { cn } from '../lib/utils';
+import ModelComparison from '../components/dashboard/ModelComparison';
+import ModelOutputChart from '../components/dashboard/ModelOutputChart';
 
-// Mock historical data comparing XGBoost predictions to actual grid usage
 const historyData = [
   { id: 'PRD-8901', date: '2026-04-26 14:00', temp: '38°C', predicted: 15420, actual: 15450, error: 0.19, status: 'Accurate' },
   { id: 'PRD-8900', date: '2026-04-26 13:00', temp: '36°C', predicted: 14800, actual: 14920, error: 0.81, status: 'Accurate' },
@@ -16,9 +17,9 @@ const historyData = [
 
 const History: React.FC = () => {
   return (
-    <Layout title="Prediction History & Audit Logs">
+    <Layout title="Algorithm Performance & Audit Logs">
       <div className="max-w-[1600px] mx-auto space-y-8">
-        
+
         {/* Top Row: Model Health Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-50 flex items-center gap-4">
@@ -30,7 +31,7 @@ const History: React.FC = () => {
               <h3 className="text-2xl font-black text-gray-900">98.4%</h3>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-50 flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
               <ArrowDownRight size={24} />
@@ -50,6 +51,12 @@ const History: React.FC = () => {
               <h3 className="text-2xl font-black text-gray-900">2 <span className="text-sm text-gray-400 font-medium ml-1">this week</span></h3>
             </div>
           </div>
+        </div>
+
+        {/* Middle Section: The Two Charts Stacked */}
+        <div className="space-y-8">
+          <ModelComparison />
+          <ModelOutputChart />
         </div>
 
         {/* Main Table Section */}
@@ -88,14 +95,14 @@ const History: React.FC = () => {
                     <td className="py-4 text-sm font-bold text-gray-900">{row.actual.toLocaleString()}</td>
                     <td className="py-4 text-sm font-bold text-gray-900 flex items-center gap-1">
                       {row.error}%
-                      {row.predicted > row.actual ? <ArrowUpRight size={14} className="text-amber-500"/> : <ArrowDownRight size={14} className="text-emerald-500"/>}
+                      {row.predicted > row.actual ? <ArrowUpRight size={14} className="text-amber-500" /> : <ArrowDownRight size={14} className="text-emerald-500" />}
                     </td>
                     <td className="py-4">
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                        row.status === 'Accurate' ? "bg-emerald-50 text-emerald-600" : 
-                        row.status === 'Warning' ? "bg-amber-50 text-amber-600" : 
-                        "bg-red-50 text-red-600"
+                        row.status === 'Accurate' ? "bg-emerald-50 text-emerald-600" :
+                          row.status === 'Warning' ? "bg-amber-50 text-amber-600" :
+                            "bg-red-50 text-red-600"
                       )}>
                         {row.status}
                       </span>
@@ -104,10 +111,6 @@ const History: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-          
-          <div className="mt-6 flex justify-center">
-            <button className="text-sm font-bold text-blue-600 hover:underline">Load More Records</button>
           </div>
         </div>
       </div>
